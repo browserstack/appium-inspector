@@ -1,8 +1,9 @@
 import _ from 'lodash';
 
 import {SAVED_FRAMEWORK, SET_SAVED_GESTURES} from '../../shared/setting-defs';
+import { INSTRUMENTATION_WINDOW_MESSAGE_EVENT, WINDOW_MESSAGE_TARGET_ORIGIN } from '../constants/common';
 import {POINTER_TYPES} from '../constants/gestures';
-import {APP_MODE, NATIVE_APP} from '../constants/session-inspector';
+import {APP_MODE, INSPECTOR_TABS, NATIVE_APP} from '../constants/session-inspector';
 import i18n from '../i18next';
 import AppiumClient from '../lib/appium-client';
 import frameworks from '../lib/client-frameworks';
@@ -116,6 +117,10 @@ export const TOGGLE_SHOW_ATTRIBUTES = 'TOGGLE_SHOW_ATTRIBUTES';
 export const TOGGLE_REFRESHING_STATE = 'TOGGLE_REFRESHING_STATE';
 
 export const SET_GESTURE_UPLOAD_ERROR = 'SET_GESTURE_UPLOAD_ERROR';
+
+
+export const ENABLE_AUTO_RELOAD = 'ENABLE_AUTO_RELOAD';
+export const DISABLE_AUTO_RELOAD = 'DISABLE_AUTO_RELOAD';
 
 const KEEP_ALIVE_PING_INTERVAL = 20 * 1000;
 const NO_NEW_COMMAND_LIMIT = 24 * 60 * 60 * 1000; // Set timeout to 24 hours
@@ -436,6 +441,11 @@ export function storeSessionSettings(updatedSessionSettings = null) {
 export function showLocatorTestModal() {
   return (dispatch) => {
     dispatch({type: SHOW_LOCATOR_TEST_MODAL});
+    window.parent.postMessage({
+      type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      action: 'element-search-tool-clicked',
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
   };
 }
 
@@ -777,6 +787,20 @@ export function clearCoordAction() {
 export function selectInspectorTab(interaction) {
   return (dispatch) => {
     dispatch({type: SELECT_INSPECTOR_TAB, interaction});
+    let action = '';
+    switch (interaction) {
+      case INSPECTOR_TABS.SOURCE: action = 'source-tab-clicked'; break;
+      case INSPECTOR_TABS.COMMANDS: action = 'commands-tab-clicked'; break;
+      case INSPECTOR_TABS.GESTURES: action = 'gestures-tab-clicked'; break;
+      case INSPECTOR_TABS.RECORDER: action = 'recorder-tab-clicked'; break;
+      case INSPECTOR_TABS.SESSION_INFO: action = 'session-info-tab-clicked'; break;
+      default: action = '';
+    }
+    window.parent.postMessage({
+      type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      action,
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
   };
 }
 
@@ -1077,5 +1101,13 @@ export function tapTickCoordinates(x, y) {
 export function toggleShowAttributes() {
   return (dispatch) => {
     dispatch({type: TOGGLE_SHOW_ATTRIBUTES});
+  };
+}
+
+export function toggleAutoReload() {
+  return (dispatch, getState) => {
+    const {isAutoReloadEnabled} = getState().inspector;
+    const type = isAutoReloadEnabled ? DISABLE_AUTO_RELOAD : ENABLE_AUTO_RELOAD;
+    dispatch({type});
   };
 }

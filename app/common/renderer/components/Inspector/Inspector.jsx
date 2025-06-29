@@ -18,7 +18,7 @@ import {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router';
 
 import {BUTTON} from '../../constants/antd-types';
-import {WINDOW_DIMENSIONS} from '../../constants/common';
+import {INSTRUMENTATION_WINDOW_MESSAGE_EVENT, NORMAL_WINDOW_MESSAGE_EVENT, WINDOW_DIMENSIONS, WINDOW_MESSAGE_TARGET_ORIGIN} from '../../constants/common';
 import {SCREENSHOT_INTERACTION_MODE} from '../../constants/screenshot';
 import {
   INSPECTOR_TABS,
@@ -152,6 +152,16 @@ const Inspector = (props) => {
   };
 
   const quitCurrentSession = async (reason, killedByUser = true) => {
+    window.parent.postMessage({
+      type: NORMAL_WINDOW_MESSAGE_EVENT,
+      data: 'quitSession',
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
+    window.parent.postMessage({
+      type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      action: 'disabled',
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
     await quitSession(reason, killedByUser);
     navigate('/session', {replace: true});
   };
@@ -289,8 +299,9 @@ const Inspector = (props) => {
               key: INSPECTOR_TABS.SOURCE,
               disabled: !showScreenshot,
               children: (
-                <div className="action-row">
-                  <div className="action-col">
+                // show the two sections side by side
+                <div className="applive-row">
+                  <div className="applive-col">
                     <Card
                       title={
                         <span>
@@ -331,7 +342,8 @@ const Inspector = (props) => {
                   </div>
                   <div
                     id="selectedElementContainer"
-                    className={`${InspectorStyles['interaction-tab-container']} ${InspectorStyles['element-detail-container']} action-col`}
+                    // for showing the sections side by side with proper margins
+                    className={`${InspectorStyles['interaction-tab-container']} ${InspectorStyles['element-detail-container']} selectedElementContainer applive-col`}
                   >
                     <Card
                       title={

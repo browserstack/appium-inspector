@@ -27,3 +27,8 @@ export const DRIVERS = {
   SAFARI: 'safari',
   GECKO: 'gecko',
 };
+
+export const NORMAL_WINDOW_MESSAGE_EVENT = 'AppLiveAppiumInspector';
+export const INSTRUMENTATION_WINDOW_MESSAGE_EVENT = 'InteractionWithAppiumInspecor';
+export const API_METHOD_INSTRUMENTATION_WINDOW_MESSAGE_EVENT = `${INSTRUMENTATION_WINDOW_MESSAGE_EVENT}:apiMethod`;
+export const WINDOW_MESSAGE_TARGET_ORIGIN = '*';

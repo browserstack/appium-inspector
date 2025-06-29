@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import { API_METHOD_INSTRUMENTATION_WINDOW_MESSAGE_EVENT, WINDOW_MESSAGE_TARGET_ORIGIN } from '../constants/common';
 import {SCREENSHOT_INTERACTION_MODE} from '../constants/screenshot';
 import {APP_MODE, NATIVE_APP, REFRESH_DELAY_MILLIS} from '../constants/session-inspector';
 import {log} from '../utils/logger';
@@ -90,6 +91,7 @@ export default class AppiumClient {
   }
 
   async executeMethod({elementId, methodName, args, skipRefresh, skipScreenshot, appMode}) {
+    const start = performance.now();
     let cachedEl;
     let res = {};
     if (!_.isArray(args) && !_.isUndefined(args)) {
@@ -141,6 +143,13 @@ export default class AppiumClient {
       }
       sourceUpdate = await this.getSourceUpdate();
     }
+    const end = performance.now();
+     window.parent.postMessage({
+      type: API_METHOD_INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      method: methodName,
+      durationInMs: end - start,
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
     return {
       ...cachedEl,
       ...contextUpdate,

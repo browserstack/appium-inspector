@@ -1,5 +1,6 @@
 import {Spin, Tree} from 'antd';
 
+import {INSTRUMENTATION_WINDOW_MESSAGE_EVENT, WINDOW_MESSAGE_TARGET_ORIGIN} from '../../constants/common';
 import {IMPORTANT_SOURCE_ATTRS} from '../../constants/source';
 import InspectorStyles from './Inspector.module.css';
 import LocatorTestModal from './LocatorTestModal.jsx';
@@ -57,6 +58,11 @@ const Source = (props) => {
     } else {
       selectElement(path);
     }
+    window.parent.postMessage({
+      type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      action: 'app-source-hierarchy-interacted',
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
   };
 
   // Recursives through the source and renders a TreeNode for an element

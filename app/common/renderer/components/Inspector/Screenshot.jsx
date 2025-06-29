@@ -1,6 +1,7 @@
 import {Spin} from 'antd';
 import {Fragment, useRef, useState} from 'react';
 
+import {INSTRUMENTATION_WINDOW_MESSAGE_EVENT, WINDOW_MESSAGE_TARGET_ORIGIN} from '../../constants/common';
 import {GESTURE_ITEM_STYLES, POINTER_TYPES} from '../../constants/gestures';
 import {DEFAULT_SWIPE, DEFAULT_TAP, SCREENSHOT_INTERACTION_MODE} from '../../constants/screenshot';
 import {INSPECTOR_TABS} from '../../constants/session-inspector';
@@ -38,6 +39,11 @@ const Screenshot = (props) => {
     if (selectedTick) {
       await tapTickCoordinates(x, y);
     }
+    window.parent.postMessage({
+      type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
+      action: 'clicked-on-appium-device-view',
+      sessionId: window.AppLiveSessionId
+    }, WINDOW_MESSAGE_TARGET_ORIGIN);
   };
 
   const handleScreenshotDown = async () => {

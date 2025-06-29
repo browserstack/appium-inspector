@@ -4,6 +4,7 @@ import {defineConfig} from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/appium-inspector/assets/v4',
   build: {
     outDir: join(__dirname, 'dist-browser'),
     emptyOutDir: true,

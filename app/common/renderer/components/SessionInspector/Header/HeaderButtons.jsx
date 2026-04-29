@@ -123,13 +123,15 @@ const HeaderButtons = (props) => {
               }}
             />
           </Tooltip>
-          <Tooltip title={t('Execute Siri Command')}>
-            <Button
-              id="siriCommand"
-              icon={<IconMessageChatbot size={18} />}
-              onClick={showSiriCommandModal}
-            />
-          </Tooltip>
+          {!window.AppLiveSessionId && (
+            <Tooltip title={t('Execute Siri Command')}>
+              <Button
+                id="siriCommand"
+                icon={<IconMessageChatbot size={18} />}
+                onClick={showSiriCommandModal}
+              />
+            </Tooltip>
+          )}
         </>
       )}
       {driver && driver.isAndroid && (

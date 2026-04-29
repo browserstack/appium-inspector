@@ -92,7 +92,7 @@ const HeaderButtons = (props) => {
   };
 
   const windowMessageCallback = useCallback((event) => {
-    if (event.data.type === NORMAL_WINDOW_MESSAGE_EVENT) {
+    if (event.data && typeof event.data === 'object' && event.data.type === NORMAL_WINDOW_MESSAGE_EVENT) {
       if (event.data.data === 'triggerAutoRefresh' && isAutoReloadEnabledRef.current) {
         applyClientMethod({methodName: 'getPageSource'});
       }

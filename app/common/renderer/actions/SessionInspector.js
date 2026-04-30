@@ -316,7 +316,7 @@ export function quitSession({reason, manualQuit = true, detachOnly = false} = {}
     }
     dispatch({type: QUIT_SESSION_DONE});
     window.parent.postMessage(
-      {type: NORMAL_WINDOW_MESSAGE_EVENT, data: 'quitSession', sessionId: window.AppLiveSessionId},
+      {type: NORMAL_WINDOW_MESSAGE_EVENT, data: 'quitSession', manualQuit, sessionId: window.AppLiveSessionId},
       WINDOW_MESSAGE_TARGET_ORIGIN,
     );
     if (!manualQuit) {

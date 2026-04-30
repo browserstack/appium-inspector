@@ -7,6 +7,7 @@ import {useNavigate} from 'react-router';
 
 import {BUTTON} from '../../constants/antd-types.js';
 import {
+  APPIUM_INSPECTOR_VERSION,
   LINKS,
   NORMAL_WINDOW_MESSAGE_EVENT,
   WINDOW_MESSAGE_TARGET_ORIGIN,
@@ -222,10 +223,10 @@ const Session = (props) => {
             className={styles.desiredCapsLink}
             icon={<IconLink size={16} />}
             onClick={() =>
-              openLink('https://github.com/appium/appium-inspector/releases/tag/v2026.2.1')
+              openLink(`https://github.com/appium/appium-inspector/releases/tag/v${APPIUM_INSPECTOR_VERSION}`)
             }
           >
-            {t('Appium Inspector v2026.2.1')}
+            {`Appium Inspector v${APPIUM_INSPECTOR_VERSION}`}
           </Button>
           {!isAttaching && (
             <Space.Compact>

@@ -36,4 +36,8 @@ export const DRIVERS = {
 export const NORMAL_WINDOW_MESSAGE_EVENT = 'AppLiveAppiumInspector';
 export const INSTRUMENTATION_WINDOW_MESSAGE_EVENT = 'InteractionWithAppiumInspecor';
 export const API_METHOD_INSTRUMENTATION_WINDOW_MESSAGE_EVENT = `${INSTRUMENTATION_WINDOW_MESSAGE_EVENT}:apiMethod`;
+// '*' is intentional: the AppLive parent origin varies across prod/staging/local environments.
+// This file is only built for the AppLive-embedded context, not the standalone inspector.
 export const WINDOW_MESSAGE_TARGET_ORIGIN = '*';
+
+export const APPIUM_INSPECTOR_VERSION = '2026.2.1';

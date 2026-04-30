@@ -59,6 +59,10 @@ const HeaderButtons = (props) => {
 
   const isAutoReloadEnabledRef = useRef(isAutoReloadEnabled);
 
+  useEffect(() => {
+    isAutoReloadEnabledRef.current = isAutoReloadEnabled;
+  }, [isAutoReloadEnabled]);
+
   const handleReloadClicked = () => {
     applyClientMethod({methodName: 'getPageSource'});
     window.parent.postMessage(

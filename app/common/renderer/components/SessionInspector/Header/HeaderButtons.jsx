@@ -183,6 +183,7 @@ const HeaderButtons = (props) => {
     <Space.Compact>
       <Tooltip title={t('Native App Mode')}>
         <Button
+          id="btnNativeMode"
           icon={<IconTriangleSquareCircle size={18} />}
           onClick={() => selectAppMode(APP_MODE.NATIVE)}
           type={appMode === APP_MODE.NATIVE ? BUTTON.PRIMARY : BUTTON.DEFAULT}
@@ -190,6 +191,7 @@ const HeaderButtons = (props) => {
       </Tooltip>
       <Tooltip title={t('Web/Hybrid App Mode')}>
         <Button
+          id="btnWebHybridMode"
           icon={<IconWorld size={18} />}
           onClick={() => selectAppMode(APP_MODE.WEB_HYBRID)}
           type={appMode === APP_MODE.WEB_HYBRID ? BUTTON.PRIMARY : BUTTON.DEFAULT}

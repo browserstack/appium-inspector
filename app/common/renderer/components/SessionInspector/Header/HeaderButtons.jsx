@@ -316,7 +316,13 @@ const HeaderButtons = (props) => {
         </Tooltip>
       )}
       <Tooltip title={t('Quit Session')}>
-        <Button id="btnClose" icon={<IconX size={18} />} onClick={quitSessionAndReturn} />
+        <Button
+          id="btnClose"
+          icon={<IconX size={18} />}
+          onClick={() =>
+            quitSessionAndReturn(window.AppLiveSessionId ? {detachOnly: true} : undefined)
+          }
+        />
       </Tooltip>
     </Space.Compact>
   );

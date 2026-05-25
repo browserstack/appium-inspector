@@ -812,7 +812,13 @@ async function fetchAllSessions(baseUrl, headers) {
   async function fetchSessionsFromEndpoint(url) {
     try {
       const res = await fetchSessionInformation({url, headers});
-      return url === seleniumSessionsEndpoint ? formatSeleniumGridSessions(res) : (res.value ?? []);
+      const value = url === seleniumSessionsEndpoint
+        ? formatSeleniumGridSessions(res)
+        : (res.value ?? []);
+      // Some Appium servers return `{value: {error: "unknown command", ...}}` from these
+      // endpoints — a non-iterable object — which used to throw on the spread below and
+      // silently empty the session list. Treat any non-array as "no sessions".
+      return Array.isArray(value) ? value : [];
     } catch {
       return [];
     }

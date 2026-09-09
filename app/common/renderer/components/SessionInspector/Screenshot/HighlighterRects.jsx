@@ -1,4 +1,5 @@
 import {RENDER_CENTROID_AS} from '../../../constants/screenshot.js';
+import {sortRectsForHitTesting} from '../../../utils/highlighter-order.js';
 import {parseCoordinates} from '../../../utils/other.js';
 import HighlighterCentroid from './HighlighterCentroid.jsx';
 import HighlighterRectForBounds from './HighlighterRectForBounds.jsx';
@@ -163,7 +164,7 @@ const HighlighterRects = (props) => {
 
   // Displays element rectangles only
   const renderElements = (elements) => {
-    for (const elem of elements) {
+    for (const elem of sortRectsForHitTesting(elements)) {
       // only render elements with non-zero height and width
       if (!elem.properties.width || !elem.properties.height) {
         continue;

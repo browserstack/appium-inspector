@@ -1,6 +1,8 @@
 import {Space, Spin} from 'antd';
 import _ from 'lodash';
 
+import {LOCATOR_STRATEGIES} from '../../../../constants/session-inspector.js';
+import {withXPathQuote} from '../../../../utils/xpath-variations.js';
 import inspectorStyles from '../../SessionInspector.module.css';
 import InteractionsNotAvailableMessage from './InteractionsNotAvailableMessage.jsx';
 import SelectedElementActions from './SelectedElementActions.jsx';
@@ -10,6 +12,7 @@ import SelectedElementCard from './SelectedElementCard.jsx';
 import SelectedElementLocatorsTable from './SelectedElementLocatorsTable.jsx';
 import SnapshotMaxDepthReachedMessage from './SnapshotMaxDepthReachedMessage.jsx';
 import XpathNotRecommendedMessage from './XpathNotRecommendedMessage.jsx';
+import XPathVariations from './XPathVariations.jsx';
 
 /**
  * Placeholder shown for the element ID while the element search is in progress.
@@ -31,6 +34,7 @@ const SelectedElement = (props) => {
     elementInteractionsNotAvailable,
     selectedElementSearchInProgress,
     sessionSettings,
+    xpathQuote,
   } = props;
 
   const elementActionsDisabled = selectedElementSearchInProgress || isFindingElementsTimes;
@@ -50,7 +54,7 @@ const SelectedElement = (props) => {
   // Get the data for the strategies table
   const elementLocatorsData = selectedElement.strategyMap.map(([key, selector]) => ({
     key,
-    selector,
+    selector: key === LOCATOR_STRATEGIES.XPATH ? withXPathQuote(selector, xpathQuote) : selector,
     find: key,
   }));
 
@@ -79,6 +83,7 @@ const SelectedElement = (props) => {
           isFindingElementsTimes={isFindingElementsTimes}
           elementLocatorsData={elementLocatorsData}
         />
+        <XPathVariations {...props} />
         <XpathNotRecommendedMessage
           currentContext={currentContext}
           elementLocatorsData={elementLocatorsData}

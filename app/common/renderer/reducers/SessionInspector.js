@@ -72,6 +72,7 @@ import {
   SET_SIRI_COMMAND_VALUE,
   SET_SOURCE_AND_SCREENSHOT,
   SET_USER_WAIT_TIMEOUT,
+  SET_XPATH_QUOTE,
   SHOW_GESTURE_ACTION,
   SHOW_GESTURE_EDITOR,
   SHOW_LOCATOR_TEST_MODAL,
@@ -105,6 +106,7 @@ const INITIAL_STATE = {
   showBoilerplate: false,
   recordedActions: [],
   clientFramework: CLIENT_FRAMEWORKS.JAVA_JUNIT4,
+  xpathQuote: '"',
   serverDetails: {},
   sessionCaps: {},
   sessionSettings: {},
@@ -265,6 +267,12 @@ export default function inspector(state = INITIAL_STATE, action) {
       return {
         ...state,
         clientFramework: action.framework,
+      };
+
+    case SET_XPATH_QUOTE:
+      return {
+        ...state,
+        xpathQuote: action.quote,
       };
 
     case RECORD_ACTION:

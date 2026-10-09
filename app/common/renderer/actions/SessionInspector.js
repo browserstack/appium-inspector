@@ -1,7 +1,11 @@
 import _ from 'lodash';
 import sanitize from 'sanitize-filename';
 
-import {SAVED_CLIENT_FRAMEWORK, SET_SAVED_GESTURES} from '../../shared/setting-defs.js';
+import {
+  PREFERRED_XPATH_QUOTE,
+  SAVED_CLIENT_FRAMEWORK,
+  SET_SAVED_GESTURES,
+} from '../../shared/setting-defs.js';
 import {
   INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
   NORMAL_WINDOW_MESSAGE_EVENT,
@@ -51,6 +55,7 @@ export const START_RECORDING = 'START_RECORDING';
 export const PAUSE_RECORDING = 'PAUSE_RECORDING';
 export const CLEAR_RECORDING = 'CLEAR_RECORDING';
 export const SET_CLIENT_FRAMEWORK = 'SET_CLIENT_FRAMEWORK';
+export const SET_XPATH_QUOTE = 'SET_XPATH_QUOTE';
 export const RECORD_ACTION = 'RECORD_ACTION';
 export const SET_SHOW_BOILERPLATE = 'SET_SHOW_BOILERPLATE';
 
@@ -358,6 +363,28 @@ export function setClientFramework(framework) {
     }
     await setSetting(SAVED_CLIENT_FRAMEWORK, framework);
     dispatch({type: SET_CLIENT_FRAMEWORK, framework});
+  };
+}
+
+export function getSavedXPathQuote() {
+  return async (dispatch) => {
+    try {
+      const quote = await getSetting(PREFERRED_XPATH_QUOTE);
+      dispatch({type: SET_XPATH_QUOTE, quote: quote === "'" ? "'" : '"'});
+    } catch (err) {
+      log.warn(`Could not read the XPath quote preference: ${err}`);
+    }
+  };
+}
+
+export function setXPathQuote(quote) {
+  return async (dispatch) => {
+    dispatch({type: SET_XPATH_QUOTE, quote});
+    try {
+      await setSetting(PREFERRED_XPATH_QUOTE, quote);
+    } catch (err) {
+      log.warn(`Could not save the XPath quote preference: ${err}`);
+    }
   };
 }
 

@@ -35,7 +35,7 @@ const SelectedElement = (props) => {
     elementInteractionsNotAvailable,
     selectedElementSearchInProgress,
     sessionSettings,
-    sourceXML,
+    selectedElementSourceXML,
   } = props;
 
   const elementActionsDisabled = selectedElementSearchInProgress || isFindingElementsTimes;
@@ -87,7 +87,7 @@ const SelectedElement = (props) => {
           elementLocatorsData={elementLocatorsData}
         />
         {xpathToolsEnabled && (
-          <XPathVariations sourceXML={sourceXML} selectedElement={selectedElement} />
+          <XPathVariations sourceXML={selectedElementSourceXML} selectedElement={selectedElement} />
         )}
         <XpathNotRecommendedMessage
           currentContext={currentContext}

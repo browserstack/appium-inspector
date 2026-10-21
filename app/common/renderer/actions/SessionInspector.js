@@ -152,7 +152,7 @@ export function selectElement(path) {
     const isNative = currentContext === NATIVE_APP;
     // Set the selected element in the source tree
     const selectedElement = findJSONElementByPath(path, sourceJSON);
-    dispatch({type: SELECT_ELEMENT, selectedElement});
+    dispatch({type: SELECT_ELEMENT, selectedElement, sourceXML});
 
     // Expand all of this element's ancestors so that it's visible in the source tree
     // Make a copy of the array to avoid state mutation

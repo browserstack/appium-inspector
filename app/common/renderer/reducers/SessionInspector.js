@@ -176,6 +176,7 @@ export default function inspector(state = INITIAL_STATE, action) {
         ...state,
         selectedElement: action.selectedElement,
         selectedElementPath: action.selectedElement.path,
+        selectedElementSourceXML: action.sourceXML,
         selectedElementId: null,
         selectedElementSearchInProgress: true,
         elementInteractionsNotAvailable: false,
@@ -196,6 +197,7 @@ export default function inspector(state = INITIAL_STATE, action) {
         ...state,
         selectedElement: undefined,
         selectedElementPath: null,
+        selectedElementSourceXML: null,
         selectedElementId: null,
         selectedElementSearchInProgress: false,
       };

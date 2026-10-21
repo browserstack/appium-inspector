@@ -56,6 +56,15 @@ describe('setting-defs.js', () => {
     });
   });
 
+  describe('DEFAULT_SETTINGS[XPATH_VARIATIONS_EXPANDED]', () => {
+    it('starts collapsed until the user expands the list', async () => {
+      stubWindow(`${ALL_PARAMS_URL}&xpathTools=1`);
+      const {DEFAULT_SETTINGS, XPATH_VARIATIONS_EXPANDED} =
+        await import('../../app/common/shared/setting-defs.js');
+      expect(DEFAULT_SETTINGS[XPATH_VARIATIONS_EXPANDED]).toBe(false);
+    });
+  });
+
   describe('DEFAULT_SETTINGS[SESSION_SERVER_PARAMS]', () => {
     it('pre-fills server params when all 4 URL params are present', async () => {
       stubWindow(ALL_PARAMS_URL);

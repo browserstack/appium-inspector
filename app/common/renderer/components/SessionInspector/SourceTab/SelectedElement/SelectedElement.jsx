@@ -1,8 +1,9 @@
 import {Space, Spin} from 'antd';
 import _ from 'lodash';
 
+import {isXPathToolsEnabled} from '../../../../../shared/setting-defs.js';
 import {LOCATOR_STRATEGIES} from '../../../../constants/session-inspector.js';
-import {withXPathQuote} from '../../../../utils/xpath-variations.js';
+import {withSingleQuotes} from '../../../../utils/xpath-variations.js';
 import inspectorStyles from '../../SessionInspector.module.css';
 import InteractionsNotAvailableMessage from './InteractionsNotAvailableMessage.jsx';
 import SelectedElementActions from './SelectedElementActions.jsx';
@@ -34,10 +35,11 @@ const SelectedElement = (props) => {
     elementInteractionsNotAvailable,
     selectedElementSearchInProgress,
     sessionSettings,
-    xpathQuote,
+    sourceXML,
   } = props;
 
   const elementActionsDisabled = selectedElementSearchInProgress || isFindingElementsTimes;
+  const xpathToolsEnabled = isXPathToolsEnabled();
 
   // Get the data for the attributes table
   const elementAttributesData = _.toPairs(selectedElement.attributes).map(([key, value]) => ({
@@ -54,7 +56,8 @@ const SelectedElement = (props) => {
   // Get the data for the strategies table
   const elementLocatorsData = selectedElement.strategyMap.map(([key, selector]) => ({
     key,
-    selector: key === LOCATOR_STRATEGIES.XPATH ? withXPathQuote(selector, xpathQuote) : selector,
+    selector:
+      xpathToolsEnabled && key === LOCATOR_STRATEGIES.XPATH ? withSingleQuotes(selector) : selector,
     find: key,
   }));
 
@@ -83,7 +86,9 @@ const SelectedElement = (props) => {
           isFindingElementsTimes={isFindingElementsTimes}
           elementLocatorsData={elementLocatorsData}
         />
-        <XPathVariations {...props} />
+        {xpathToolsEnabled && (
+          <XPathVariations sourceXML={sourceXML} selectedElement={selectedElement} />
+        )}
         <XpathNotRecommendedMessage
           currentContext={currentContext}
           elementLocatorsData={elementLocatorsData}

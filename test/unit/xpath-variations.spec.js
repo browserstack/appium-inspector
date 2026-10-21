@@ -4,7 +4,7 @@ import {select} from 'xpath';
 import {xmlToDOM} from '../../app/common/renderer/utils/source-parsing.js';
 import {
   getXPathVariations,
-  withXPathQuote,
+  withSingleQuotes,
 } from '../../app/common/renderer/utils/xpath-variations.js';
 
 const ANDROID_SOURCE = `<hierarchy>
@@ -50,7 +50,7 @@ function allPaths(node, prefix = '') {
 
 describe('getXPathVariations', () => {
   it('offers ID, type, attribute, parent-scoped and full-path variations for an Android button', () => {
-    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.0.1', "'"))).toEqual({
+    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.0.1'))).toEqual({
       'ID only': "//*[@resource-id='com.barclays:id/btn_login']",
       'Type + ID': "//android.widget.Button[@resource-id='com.barclays:id/btn_login']",
       'Type + text': "//android.widget.Button[@text='Log in']",
@@ -64,14 +64,8 @@ describe('getXPathVariations', () => {
     });
   });
 
-  it('uses double quotes when that is the preference', () => {
-    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.0.1', '"'))['ID only']).toBe(
-      '//*[@resource-id="com.barclays:id/btn_login"]',
-    );
-  });
-
   it('drops variations that match more than one element', () => {
-    const savings = byLabel(getXPathVariations(ANDROID_SOURCE, '0.1.1', "'"));
+    const savings = byLabel(getXPathVariations(ANDROID_SOURCE, '0.1.1'));
     expect(savings['ID only']).toBeUndefined();
     expect(savings['Type + ID']).toBeUndefined();
     expect(savings['Type + text']).toBe("//android.widget.TextView[@text='Savings']");
@@ -87,7 +81,7 @@ describe('getXPathVariations', () => {
   });
 
   it('falls back to indexed variations when no attribute is unique', () => {
-    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.2.0', "'"))).toEqual({
+    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.2.0'))).toEqual({
       Indexed: "(//android.widget.ImageView[@resource-id='com.barclays:id/icon'])[1]",
       'Inside unique parent':
         "(//*[@resource-id='com.barclays:id/bottom_nav']//android.widget.ImageView)[1]",
@@ -97,13 +91,13 @@ describe('getXPathVariations', () => {
   });
 
   it('keeps double quotes for a value that contains an apostrophe', () => {
-    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.0.2', "'"))['Type + text']).toBe(
+    expect(byLabel(getXPathVariations(ANDROID_SOURCE, '0.0.2'))['Type + text']).toBe(
       `//android.widget.TextView[@text="Don't have an account?"]`,
     );
   });
 
   it('uses the iOS name attribute as the ID', () => {
-    const button = byLabel(getXPathVariations(IOS_SOURCE, '0.0.0.0', "'"));
+    const button = byLabel(getXPathVariations(IOS_SOURCE, '0.0.0.0'));
     expect(button['ID only']).toBe("//*[@name='loginButton']");
     expect(button['Type + label']).toBe("//XCUIElementTypeButton[@label='Log in']");
     expect(button['Inside unique parent']).toBe("//*[@name='loginForm']//XCUIElementTypeButton");
@@ -113,7 +107,7 @@ describe('getXPathVariations', () => {
   });
 
   it('does not offer the whole iOS app as the unique parent', () => {
-    const help = byLabel(getXPathVariations(IOS_SOURCE, '0.0.1', "'"));
+    const help = byLabel(getXPathVariations(IOS_SOURCE, '0.0.1'));
     expect(help['ID only']).toBe("//*[@name='help']");
     expect(help['Inside unique parent']).toBeUndefined();
   });
@@ -126,52 +120,51 @@ describe('getXPathVariations', () => {
     const root = Array.from(doc.childNodes).find((n) => n.nodeType === 1);
     const asDeviceEvaluates = (xpath) =>
       root.tagName === 'AppiumAUT' && /^\/[^/]/.test(xpath) ? `/AppiumAUT${xpath}` : xpath;
-    for (const quote of ["'", '"']) {
-      for (const path of allPaths(root)) {
-        const target = path
-          .split('.')
-          .reduce(
-            (node, i) => Array.from(node.childNodes).filter((n) => n.nodeType === 1)[i],
-            root,
-          );
-        const xpaths = getXPathVariations(source, path, quote).map((v) => v.xpath);
-        expect(new Set(xpaths).size).toBe(xpaths.length);
-        for (const xpath of xpaths) {
-          expect(select(asDeviceEvaluates(xpath), doc), `${path}: ${xpath}`).toEqual([target]);
-        }
+    for (const path of allPaths(root)) {
+      const target = path
+        .split('.')
+        .reduce((node, i) => Array.from(node.childNodes).filter((n) => n.nodeType === 1)[i], root);
+      const xpaths = getXPathVariations(source, path).map((v) => v.xpath);
+      expect(new Set(xpaths).size).toBe(xpaths.length);
+      for (const xpath of xpaths) {
+        expect(select(asDeviceEvaluates(xpath), doc), `${path}: ${xpath}`).toEqual([target]);
       }
     }
   });
 
   it('returns nothing when the path does not resolve', () => {
-    expect(getXPathVariations(ANDROID_SOURCE, '9.9', "'")).toEqual([]);
-    expect(getXPathVariations('', '0', "'")).toEqual([]);
+    expect(getXPathVariations(ANDROID_SOURCE, '9.9')).toEqual([]);
+    expect(getXPathVariations('', '0')).toEqual([]);
   });
 });
 
-describe('withXPathQuote', () => {
+describe('withSingleQuotes', () => {
   it('switches every attribute value to single quotes', () => {
     expect(
-      withXPathQuote('//android.widget.Button[@resource-id="a:id/b" and @text="Log in"]', "'"),
+      withSingleQuotes('//android.widget.Button[@resource-id="a:id/b" and @text="Log in"]'),
     ).toBe("//android.widget.Button[@resource-id='a:id/b' and @text='Log in']");
   });
 
   it('switches indexed xpaths too', () => {
-    expect(withXPathQuote('(//android.widget.TextView[@text="Savings"])[2]', "'")).toBe(
+    expect(withSingleQuotes('(//android.widget.TextView[@text="Savings"])[2]')).toBe(
       "(//android.widget.TextView[@text='Savings'])[2]",
     );
   });
 
   it('leaves a value containing an apostrophe in double quotes', () => {
-    expect(withXPathQuote(`//*[@text="Don't" and @name="x"]`, "'")).toBe(
+    expect(withSingleQuotes(`//*[@text="Don't" and @name="x"]`)).toBe(
       `//*[@text="Don't" and @name='x']`,
     );
   });
 
-  it('is a no-op for the double-quote preference and for paths without attributes', () => {
-    const xpath = '//*[@text="Log in"]';
-    expect(withXPathQuote(xpath, '"')).toBe(xpath);
-    expect(withXPathQuote('/hierarchy/android.widget.Button[2]', "'")).toBe(
+  it('uses concat for a value containing both kinds of quote', () => {
+    expect(getXPathVariations(ANDROID_SOURCE, '0.0.3')[0].xpath).toBe(
+      `//android.widget.TextView[@text=concat('Say "hi" to O', "'", 'Neil')]`,
+    );
+  });
+
+  it('leaves paths without attributes unchanged', () => {
+    expect(withSingleQuotes('/hierarchy/android.widget.Button[2]')).toBe(
       '/hierarchy/android.widget.Button[2]',
     );
   });

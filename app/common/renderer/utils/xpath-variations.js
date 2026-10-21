@@ -6,20 +6,18 @@ const ID_ATTRS = ['resource-id', 'name', 'id', 'accessibility-id'];
 const DESCRIPTIVE_ATTRS = ['text', 'content-desc', 'label', 'value'];
 const XCUITEST_SOURCE_ROOT = 'AppiumAUT';
 
-function literal(value, quote) {
-  const other = quote === "'" ? '"' : "'";
-  if (!value.includes(quote)) {
-    return `${quote}${value}${quote}`;
+function literal(value) {
+  if (!value.includes("'")) {
+    return `'${value}'`;
   }
-  if (!value.includes(other)) {
-    return `${other}${value}${other}`;
+  if (!value.includes('"')) {
+    return `"${value}"`;
   }
-  const parts = value.split(quote).map((part) => `${quote}${part}${quote}`);
-  return `concat(${parts.join(`, ${other}${quote}${other}, `)})`;
+  return `concat('${value.split("'").join(`', "'", '`)}')`;
 }
 
-function predicate(node, attrs, quote) {
-  return `[${attrs.map((attr) => `@${attr}=${literal(node.getAttribute(attr), quote)}`).join(' and ')}]`;
+function predicate(node, attrs) {
+  return `[${attrs.map((attr) => `@${attr}=${literal(node.getAttribute(attr))}`).join(' and ')}]`;
 }
 
 function find(xpath, doc) {
@@ -44,7 +42,7 @@ function isWholeApp(element) {
   return !element.parentNode?.tagName || element.tagName === 'XCUIElementTypeApplication';
 }
 
-function insideUniqueParent(doc, node, attrs, quote) {
+function insideUniqueParent(doc, node, attrs) {
   for (
     let parent = node.parentNode;
     parent?.tagName && !isWholeApp(parent);
@@ -54,12 +52,12 @@ function insideUniqueParent(doc, node, attrs, quote) {
     if (!parentIdAttr) {
       continue;
     }
-    const anchor = `//*${predicate(parent, [parentIdAttr], quote)}`;
+    const anchor = `//*${predicate(parent, [parentIdAttr])}`;
     if (!selectsOnly(anchor, doc, parent)) {
       continue;
     }
     const scoped = `${anchor}//${node.tagName}`;
-    const steps = [scoped, ...attrs.map((attr) => scoped + predicate(node, [attr], quote))];
+    const steps = [scoped, ...attrs.map((attr) => scoped + predicate(node, [attr]))];
     return steps.find((xpath) => selectsOnly(xpath, doc, node)) ?? indexed(scoped, doc, node);
   }
 }
@@ -75,7 +73,7 @@ function fullPathSteps(node) {
   return steps;
 }
 
-export function getXPathVariations(sourceXML, path, quote) {
+export function getXPathVariations(sourceXML, path) {
   if (!sourceXML || !path) {
     return [];
   }
@@ -91,26 +89,23 @@ export function getXPathVariations(sourceXML, path, quote) {
 
   const candidates = [];
   if (idAttr) {
-    candidates.push(['ID only', `//*${predicate(node, [idAttr], quote)}`]);
-    candidates.push(['Type + ID', `//${tag}${predicate(node, [idAttr], quote)}`]);
+    candidates.push(['ID only', `//*${predicate(node, [idAttr])}`]);
+    candidates.push(['Type + ID', `//${tag}${predicate(node, [idAttr])}`]);
   }
   for (const attr of descriptiveAttrs) {
-    candidates.push([`Type + ${attr}`, `//${tag}${predicate(node, [attr], quote)}`]);
+    candidates.push([`Type + ${attr}`, `//${tag}${predicate(node, [attr])}`]);
   }
   if (idAttr && descriptiveAttrs.length) {
     const [firstAttr] = descriptiveAttrs;
-    candidates.push([
-      `ID + ${firstAttr}`,
-      `//${tag}${predicate(node, [idAttr, firstAttr], quote)}`,
-    ]);
+    candidates.push([`ID + ${firstAttr}`, `//${tag}${predicate(node, [idAttr, firstAttr])}`]);
   }
   const indexAttr = idAttr ?? descriptiveAttrs[0];
-  const typeXPath = `//${tag}${indexAttr ? predicate(node, [indexAttr], quote) : ''}`;
+  const typeXPath = `//${tag}${indexAttr ? predicate(node, [indexAttr]) : ''}`;
   if (!selectsOnly(typeXPath, doc, node)) {
     candidates.push(['Indexed', indexed(typeXPath, doc, node)]);
   }
   const ownAttrs = [idAttr, ...descriptiveAttrs].filter(Boolean);
-  candidates.push(['Inside unique parent', insideUniqueParent(doc, node, ownAttrs, quote)]);
+  candidates.push(['Inside unique parent', insideUniqueParent(doc, node, ownAttrs)]);
   const steps = fullPathSteps(node);
   const deviceSteps = steps[0] === XCUITEST_SOURCE_ROOT ? steps.slice(1) : steps;
   if (deviceSteps.length) {
@@ -128,12 +123,9 @@ export function getXPathVariations(sourceXML, path, quote) {
   return variations;
 }
 
-export function withXPathQuote(xpath, quote) {
-  if (quote !== "'" || !xpath) {
+export function withSingleQuotes(xpath) {
+  if (!xpath) {
     return xpath;
   }
-  return xpath.replace(
-    /(@[^\s="'[\]]+=)"([^"]*)"/g,
-    (_, attr, value) => attr + literal(value, quote),
-  );
+  return xpath.replace(/(@[^\s="'[\]]+=)"([^"]*)"/g, (_, attr, value) => attr + literal(value));
 }

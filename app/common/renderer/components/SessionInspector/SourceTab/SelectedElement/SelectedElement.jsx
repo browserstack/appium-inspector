@@ -1,6 +1,9 @@
 import {Space, Spin} from 'antd';
 import _ from 'lodash';
 
+import {isXPathToolsEnabled} from '../../../../../shared/setting-defs.js';
+import {LOCATOR_STRATEGIES} from '../../../../constants/session-inspector.js';
+import {withSingleQuotes} from '../../../../utils/xpath-variations.js';
 import inspectorStyles from '../../SessionInspector.module.css';
 import InteractionsNotAvailableMessage from './InteractionsNotAvailableMessage.jsx';
 import SelectedElementActions from './SelectedElementActions.jsx';
@@ -10,6 +13,7 @@ import SelectedElementCard from './SelectedElementCard.jsx';
 import SelectedElementLocatorsTable from './SelectedElementLocatorsTable.jsx';
 import SnapshotMaxDepthReachedMessage from './SnapshotMaxDepthReachedMessage.jsx';
 import XpathNotRecommendedMessage from './XpathNotRecommendedMessage.jsx';
+import XPathVariations from './XPathVariations.jsx';
 
 /**
  * Placeholder shown for the element ID while the element search is in progress.
@@ -31,9 +35,11 @@ const SelectedElement = (props) => {
     elementInteractionsNotAvailable,
     selectedElementSearchInProgress,
     sessionSettings,
+    selectedElementSourceXML,
   } = props;
 
   const elementActionsDisabled = selectedElementSearchInProgress || isFindingElementsTimes;
+  const xpathToolsEnabled = isXPathToolsEnabled();
 
   // Get the data for the attributes table
   const elementAttributesData = _.toPairs(selectedElement.attributes).map(([key, value]) => ({
@@ -50,7 +56,8 @@ const SelectedElement = (props) => {
   // Get the data for the strategies table
   const elementLocatorsData = selectedElement.strategyMap.map(([key, selector]) => ({
     key,
-    selector,
+    selector:
+      xpathToolsEnabled && key === LOCATOR_STRATEGIES.XPATH ? withSingleQuotes(selector) : selector,
     find: key,
   }));
 
@@ -79,6 +86,9 @@ const SelectedElement = (props) => {
           isFindingElementsTimes={isFindingElementsTimes}
           elementLocatorsData={elementLocatorsData}
         />
+        {xpathToolsEnabled && (
+          <XPathVariations sourceXML={selectedElementSourceXML} selectedElement={selectedElement} />
+        )}
         <XpathNotRecommendedMessage
           currentContext={currentContext}
           elementLocatorsData={elementLocatorsData}

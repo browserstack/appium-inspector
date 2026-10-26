@@ -11,7 +11,12 @@ import SelectedElementTableCell from './SelectedElementTableCell.jsx';
 import xpathStyles from './XPathVariations.module.css';
 
 const PANEL_KEY = 'xpathVariations';
-let isExpandedSaved = Boolean(await getSetting(XPATH_VARIATIONS_EXPANDED));
+let isExpandedSaved = false;
+try {
+  isExpandedSaved = Boolean(await getSetting(XPATH_VARIATIONS_EXPANDED));
+} catch (err) {
+  log.warn(`Could not read the XPath variations panel state: ${err}`);
+}
 
 const XPathVariations = ({sourceXML, selectedElement}) => {
   const {t} = useTranslation();

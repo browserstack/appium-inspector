@@ -786,6 +786,35 @@ export function toggleAutoReload(enable) {
   };
 }
 
+/**
+ * AL-16182: ask the attached session which displays it has.
+ *
+ * `mobile:listDisplays` is an Appium 2.x+ execute-script command with no Appium 1.x
+ * equivalent, and BrowserStack iOS real devices still default to Appium 1.21.0
+ * (knowledge/docs/patches/appium-1x-compatibility.md). The usual
+ * `window.AppLiveSessionId ? legacy : mobile` branch is not available here, so instead of
+ * shipping a control that throws "Unknown method" we ask the driver once and let the caller
+ * hide the control when the answer is empty.
+ *
+ * Uses executeDriverCommand rather than applyClientMethod so a failure stays silent — the
+ * latter calls showError and would surface a red toast on every Appium 1.x session.
+ * Same shape as getSupportedSessionMethods#safelyCallCommand below.
+ */
+export function getAvailableDisplays() {
+  return async (_dispatch, getState) => {
+    try {
+      const action = executeDriverCommand({
+        methodName: 'executeScript',
+        args: ['mobile:listDisplays', []],
+      });
+      const {commandRes} = await action(getState);
+      return Array.isArray(commandRes) ? commandRes : [];
+    } catch {
+      return [];
+    }
+  };
+}
+
 export function getSupportedSessionMethods() {
   return async (_dispatch, getState) => {
     async function safelyCallCommand(methodName) {

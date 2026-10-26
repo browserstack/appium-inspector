@@ -23,6 +23,7 @@ import {useTranslation} from 'react-i18next';
 
 import {BUTTON} from '../../../constants/antd-types.js';
 import {
+  DRIVERS,
   INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
   LINKS,
   NORMAL_WINDOW_MESSAGE_EVENT,
@@ -30,6 +31,7 @@ import {
 } from '../../../constants/common.js';
 import {APP_MODE} from '../../../constants/session-inspector.js';
 import {openLink} from '../../../polyfills.js';
+import DisplayControls from './DisplayControls.jsx';
 import styles from './Header.module.css';
 
 const HeaderButtons = (props) => {
@@ -54,6 +56,10 @@ const HeaderButtons = (props) => {
     toggleAutoSessionRestart,
     isAutoReloadEnabled,
     toggleAutoReload,
+    automationName,
+    sessionSettings,
+    storeSessionSettings,
+    getAvailableDisplays,
   } = props;
   const {t} = useTranslation();
 
@@ -342,6 +348,22 @@ const HeaderButtons = (props) => {
     <div className={styles.headerButtons}>
       <Space size="middle">
         {deviceControls}
+        {/*
+          AL-16182. XCUITest only for now: upstream also enables this for UiAutomator2 on
+          Android 11+, but BrowserStack Android real devices default to Appium 1.22.0, which
+          cannot answer mobile:listDisplays either. DisplayControls hides itself when the
+          driver cannot enumerate displays, so adding Android here is safe once a device
+          actually runs a new enough driver.
+        */}
+        {automationName === DRIVERS.XCUITEST && (
+          <DisplayControls
+            sessionSettings={sessionSettings}
+            applyClientMethod={applyClientMethod}
+            storeSessionSettings={storeSessionSettings}
+            getAvailableDisplays={getAvailableDisplays}
+            automationName={automationName}
+          />
+        )}
         {appModeControls}
         {refreshControls}
         {generalControls}

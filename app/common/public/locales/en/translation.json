@@ -308,6 +308,8 @@
   "RabbitQA API Key": "RabbitQA API Key",
   "RestartSessionMessage": "Device Connection Lost – Restarting the Session…",
   "ToggleRestartSession": "Toggle Session Reload Upon Device Disconnect",
+  "toggleMultiDisplayMode": "Toggle Multi-Display Mode",
+  "defaultDisplay": "Default Display",
   "toggleTableFormatting": "Toggle Table Formatting",
   "copyResultToClipboard": "Copy Result to Clipboard",
   "Property": "Property",

@@ -37,6 +37,34 @@ describe('setting-defs.js', () => {
     });
   });
 
+  describe('#isXPathToolsEnabled', () => {
+    it('is true when AppLive passes xpathTools=1', async () => {
+      stubWindow(`${ALL_PARAMS_URL}&xpathTools=1`);
+      const {isXPathToolsEnabled} = await import('../../app/common/shared/setting-defs.js');
+      expect(isXPathToolsEnabled()).toBe(true);
+    });
+
+    it('is false without the param or with any other value', async () => {
+      stubWindow(ALL_PARAMS_URL);
+      const {isXPathToolsEnabled} = await import('../../app/common/shared/setting-defs.js');
+      expect(isXPathToolsEnabled()).toBe(false);
+
+      vi.resetModules();
+      stubWindow(`${ALL_PARAMS_URL}&xpathTools=0`);
+      const reloaded = await import('../../app/common/shared/setting-defs.js');
+      expect(reloaded.isXPathToolsEnabled()).toBe(false);
+    });
+  });
+
+  describe('DEFAULT_SETTINGS[XPATH_VARIATIONS_EXPANDED]', () => {
+    it('starts collapsed until the user expands the list', async () => {
+      stubWindow(`${ALL_PARAMS_URL}&xpathTools=1`);
+      const {DEFAULT_SETTINGS, XPATH_VARIATIONS_EXPANDED} =
+        await import('../../app/common/shared/setting-defs.js');
+      expect(DEFAULT_SETTINGS[XPATH_VARIATIONS_EXPANDED]).toBe(false);
+    });
+  });
+
   describe('DEFAULT_SETTINGS[SESSION_SERVER_PARAMS]', () => {
     it('pre-fills server params when all 4 URL params are present', async () => {
       stubWindow(ALL_PARAMS_URL);

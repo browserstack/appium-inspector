@@ -11,6 +11,7 @@ export const SESSION_SERVER_PARAMS = 'SESSION_SERVER_PARAMS';
 export const SESSION_SERVER_TYPE = 'SESSION_SERVER_TYPE';
 export const SAVED_CLIENT_FRAMEWORK = 'SAVED_FRAMEWORK';
 export const VISIBLE_PROVIDERS = 'VISIBLE_PROVIDERS';
+export const XPATH_VARIATIONS_EXPANDED = 'XPATH_VARIATIONS_EXPANDED';
 
 export const REQUIRED_PARAMS_FOR_PREFILLING = ['remoteHost', 'remotePort', 'remotePath', 'sessionId'];
 
@@ -25,6 +26,8 @@ export const checkIfAllParamsPresent = () => {
   }
   return allPresent;
 };
+
+export const isXPathToolsEnabled = () => _url.searchParams.get('xpathTools') === '1';
 
 export const DEFAULT_SETTINGS = {
   [PREFERRED_LANGUAGE]: fallbackLng,
@@ -45,6 +48,7 @@ export const DEFAULT_SETTINGS = {
   [SESSION_SERVER_TYPE]: null,
   [SAVED_CLIENT_FRAMEWORK]: 'java',
   [VISIBLE_PROVIDERS]: null,
+  [XPATH_VARIATIONS_EXPANDED]: false,
 };
 
 // When running inside AppLive (URL params present), overwrite any stale localStorage

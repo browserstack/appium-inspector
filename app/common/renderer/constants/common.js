@@ -36,8 +36,19 @@ export const DRIVERS = {
 export const NORMAL_WINDOW_MESSAGE_EVENT = 'AppLiveAppiumInspector';
 export const INSTRUMENTATION_WINDOW_MESSAGE_EVENT = 'InteractionWithAppiumInspecor';
 export const API_METHOD_INSTRUMENTATION_WINDOW_MESSAGE_EVENT = `${INSTRUMENTATION_WINDOW_MESSAGE_EVENT}:apiMethod`;
-// '*' is intentional: the AppLive parent origin varies across prod/staging/local environments.
-// This file is only built for the AppLive-embedded context, not the standalone inspector.
-export const WINDOW_MESSAGE_TARGET_ORIGIN = '*';
+// The App Automate dashboard posts this (type only) whenever the user taps the live device, so the
+// Inspector can refresh its source tree to stay in step.
+export const MOBILE_DEVICE_INTERACTION_EVENT = 'MOBILE_DEVICE_INTERACTION';
+// Target origin for postMessage to the embedding parent. Derived from document.referrer (the page
+// that embedded this Inspector) so session events reach only that origin instead of being broadcast
+// with '*'. The referrer adapts across prod/staging/local, so no origin is hardcoded; it falls back
+// to '*' only when there is no referrer (non-embedded context, where there is no parent to leak to).
+export const WINDOW_MESSAGE_TARGET_ORIGIN = (() => {
+  try {
+    return document.referrer ? new URL(document.referrer).origin : '*';
+  } catch {
+    return '*';
+  }
+})();
 
 export const APPIUM_INSPECTOR_VERSION = '2026.2.1';

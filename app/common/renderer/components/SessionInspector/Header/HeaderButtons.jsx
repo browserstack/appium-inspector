@@ -21,10 +21,12 @@ import {Button, Divider, Select, Space, Switch, Tooltip} from 'antd';
 import {useCallback, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
 
+import {isAaDashboard} from '../../../../shared/setting-defs.js';
 import {BUTTON} from '../../../constants/antd-types.js';
 import {
   INSTRUMENTATION_WINDOW_MESSAGE_EVENT,
   LINKS,
+  MOBILE_DEVICE_INTERACTION_EVENT,
   NORMAL_WINDOW_MESSAGE_EVENT,
   WINDOW_MESSAGE_TARGET_ORIGIN,
 } from '../../../constants/common.js';
@@ -96,10 +98,21 @@ const HeaderButtons = (props) => {
   };
 
   const windowMessageCallback = useCallback((event) => {
-    if (event.data && typeof event.data === 'object' && event.data.type === NORMAL_WINDOW_MESSAGE_EVENT) {
-      if (event.data.data === 'triggerAutoRefresh' && isAutoReloadEnabledRef.current) {
-        applyClientMethod({methodName: 'getPageSource'});
-      }
+    if (!event.data || typeof event.data !== 'object') {
+      return;
+    }
+    // AppLive: refresh when the parent signals triggerAutoRefresh (respects the auto-reload toggle)
+    if (
+      event.data.type === NORMAL_WINDOW_MESSAGE_EVENT &&
+      event.data.data === 'triggerAutoRefresh' &&
+      isAutoReloadEnabledRef.current
+    ) {
+      applyClientMethod({methodName: 'getPageSource'});
+    }
+    // App Automate: the dashboard posts MOBILE_DEVICE_INTERACTION when the user taps the live
+    // device; refresh the source tree so the Inspector stays in step.
+    if (isAaDashboard() && event.data.type === MOBILE_DEVICE_INTERACTION_EVENT) {
+      applyClientMethod({methodName: 'getPageSource'});
     }
   }, [applyClientMethod]);
 

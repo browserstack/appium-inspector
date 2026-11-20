@@ -34,6 +34,7 @@
     "build": "npm run build:browser && npm run build:electron && npm run build:plugin",
     "build:browser": "vite build",
     "build:browser:url": "vite build --base $PUBLIC_URL",
+    "build:browser:aa": "vite build --base /appium-inspector/",
     "build:plugin": "vite build --base /inspector --outDir ../../plugins/dist-browser",
     "build:electron": "electron-vite build",
     "preview:browser": "npm run build:browser && vite preview",

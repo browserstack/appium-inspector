@@ -2,6 +2,7 @@ import _ from 'lodash';
 import sanitize from 'sanitize-filename';
 
 import {
+  isAaDashboard,
   SAVED_SESSIONS,
   SERVER_ARGS,
   SESSION_SERVER_PARAMS,
@@ -105,6 +106,7 @@ const CONN_TIMEOUT = 5 * 60 * 1000;
 const NEW_COMMAND_TIMEOUT_SEC = 3600;
 
 let isFirstRun = true; // we only want to auto start a session on a first run
+let aaDashboardAttached = false; // AA mode: only auto-attach to the embedded session once
 
 const JSON_TYPES = ['object', 'number', 'boolean'];
 
@@ -339,8 +341,12 @@ export function newSession(originalCaps, attachSessId = null) {
       return false;
     } finally {
       dispatch({type: NEW_SESSION_DONE});
-      // Save the current server settings
-      await setSetting(SESSION_SERVER_PARAMS, session.server);
+      // Save the current server settings — but NEVER persist App Automate dashboard credentials.
+      // In AA mode username/accessKey arrive in the iframe URL on every load, so they must stay in
+      // memory (Redux) only and never be written to localStorage.
+      if (!isAaDashboard()) {
+        await setSetting(SESSION_SERVER_PARAMS, session.server);
+      }
     }
 
     // The homepage arg in ChromeDriver is not working with Appium. iOS can have a default url, but
@@ -997,7 +1003,9 @@ export function bindWindowClose() {
       let {driver} = getState().inspector;
       if (driver) {
         try {
-          const action = quitSession();
+          // In App Automate dashboard mode the session's lifecycle is owned by the dashboard,
+          // so only detach on unload — the Inspector must never delete the AA session.
+          const action = quitSession(isAaDashboard() ? {detachOnly: true} : undefined);
           await action(dispatch, getState);
         } finally {
           driver = null;
@@ -1071,6 +1079,37 @@ export function initFromQueryString(loadNewSession) {
         return loadNewSession(null, attachSessId);
       }
       loadNewSession(caps);
+    }
+  };
+}
+
+/**
+ * App Automate dashboard mode (source=aa_dashboard): configure the BrowserStack provider with
+ * the credentials passed in the iframe URL and auto-attach to the running session. This is the
+ * AA equivalent of AppLive's getRunningSessions()/auto-attach flow, which relies on the
+ * remoteHost/remotePort/remotePath params that AA does not send. Gated on isAaDashboard() so
+ * App Live's flows are never affected.
+ */
+export function initAaDashboardSession(loadNewSession) {
+  return async (dispatch, getState) => {
+    if (!isAaDashboard() || aaDashboardAttached) {
+      return;
+    }
+    aaDashboardAttached = true;
+
+    const url = new URL(window.location.href);
+    const username = url.searchParams.get('username');
+    const accessKey = url.searchParams.get('accessKey');
+    const sessionId = url.searchParams.get('session_id');
+
+    // Point the Inspector at hub-cloud using the dashboard's credentials (the BrowserStack
+    // vendor reads server.browserstack.username/accessKey and defaults host to hub-cloud).
+    await changeServerType(SERVER_TYPES.BROWSERSTACK)(dispatch, getState);
+    await setServerParam('username', username, SERVER_TYPES.BROWSERSTACK)(dispatch, getState);
+    await setServerParam('accessKey', accessKey, SERVER_TYPES.BROWSERSTACK)(dispatch, getState);
+
+    if (sessionId) {
+      await loadNewSession(null, sessionId);
     }
   };
 }

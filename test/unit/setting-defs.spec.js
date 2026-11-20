@@ -4,9 +4,18 @@ const ALL_PARAMS_URL =
   'http://localhost/?remoteHost=myhost&remotePort=4723&remotePath=/wd/hub&sessionId=abc123';
 const MISSING_PARAM_URL = 'http://localhost/?remoteHost=myhost&remotePort=4723&remotePath=/wd/hub';
 const NO_PARAMS_URL = 'http://localhost/';
+const AA_DASHBOARD_URL =
+  'http://localhost/?username=user1&accessKey=key1&session_id=sess123&source=aa_dashboard';
+const AA_MISSING_CRED_URL = 'http://localhost/?username=user1&session_id=sess123&source=aa_dashboard';
 
-function stubWindow(href) {
-  vi.stubGlobal('window', {location: {href}, AppLiveSessionId: null});
+function stubWindow(href, {embedded = true, embedderOrigin = 'https://app-automate.browserstack.com'} = {}) {
+  const win = {
+    location: {href, ancestorOrigins: embedded ? [embedderOrigin] : []},
+    AppLiveSessionId: null,
+  };
+  // isAaDashboard() checks window.parent !== window and the ancestor origins
+  win.parent = embedded ? {} : win;
+  vi.stubGlobal('window', win);
 }
 
 describe('setting-defs.js', () => {
@@ -34,6 +43,51 @@ describe('setting-defs.js', () => {
       const {checkIfAllParamsPresent} = await import('../../app/common/shared/setting-defs.js');
       expect(checkIfAllParamsPresent()).toBe(false);
       expect(window.AppLiveSessionId).toBeNull();
+    });
+  });
+
+  describe('#isAaDashboard', () => {
+    it('is true when source=aa_dashboard and all AA credentials are present', async () => {
+      stubWindow(AA_DASHBOARD_URL);
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(true);
+    });
+
+    it('is false when source=aa_dashboard but a credential is missing', async () => {
+      stubWindow(AA_MISSING_CRED_URL);
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is false for App Live URLs (no source=aa_dashboard), so AA mode never triggers there', async () => {
+      stubWindow(ALL_PARAMS_URL);
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is false when loaded top-level (not framed), even with all AA params — login-CSRF guard', async () => {
+      stubWindow(AA_DASHBOARD_URL, {embedded: false});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is false when framed by an untrusted origin (credential-injection guard)', async () => {
+      stubWindow(AA_DASHBOARD_URL, {embedderOrigin: 'https://evil.example.com'});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is true when embedded by a staging bsstag dashboard', async () => {
+      stubWindow(AA_DASHBOARD_URL, {embedderOrigin: 'https://app-automate-k8s-devaa.bsstag.com'});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(true);
+    });
+
+    it('exposes the snake-case session_id on window.AppLiveSessionId', async () => {
+      stubWindow(AA_DASHBOARD_URL);
+      // DEFAULT_SETTINGS calls checkIfAllParamsPresent() on import, which sets the global
+      await import('../../app/common/shared/setting-defs.js');
+      expect(window.AppLiveSessionId).toBe('sess123');
     });
   });
 

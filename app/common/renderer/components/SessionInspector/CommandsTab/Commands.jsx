@@ -4,6 +4,7 @@ import _ from 'lodash';
 import {useEffect, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 
+import {isAaDashboard} from '../../../../shared/setting-defs.js';
 import {
   adjustParamValueType,
   transformCommandsMap,
@@ -111,6 +112,14 @@ const Commands = (props) => {
 
   useEffect(() => {
     (async () => {
+      // App Automate dashboard mode: always render the static grouped command list (App Management,
+      // Session, Web, …) so AA's Inspector matches App Live and today's AA layout, instead of the
+      // dynamic flat list that appears when the hub forwards GET /appium/commands (e.g. UiAutomator2
+      // over hub-cloud). Keeps the customer-facing command tab consistent across iOS and Android.
+      if (isAaDashboard()) {
+        setHasMethodsMap(false);
+        return;
+      }
       const {commands, executeMethods} = await getSupportedSessionMethods();
       setHasMethodsMap(!(_.isEmpty(commands) && _.isEmpty(executeMethods)));
       setDriverCommands(transformCommandsMap(commands));

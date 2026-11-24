@@ -1,4 +1,6 @@
+import {isAaDashboard} from '../../../shared/setting-defs.js';
 import {BaseVendor} from './base.js';
+import {DEFAULT_BROWSERSTACK_HOST, getBstackHubUrl} from './bstack-hub.js';
 
 export class BrowserstackVendor extends BaseVendor {
   /**
@@ -15,7 +17,10 @@ export class BrowserstackVendor extends BaseVendor {
       {name: 'Access Key', val: accessKey},
     ]);
 
-    const host = process.env.BROWSERSTACK_HOST || 'hub-cloud.browserstack.com';
+    const host =
+      isAaDashboard() && typeof window !== 'undefined'
+        ? getBstackHubUrl(window.location.href)
+        : process.env.BROWSERSTACK_HOST || DEFAULT_BROWSERSTACK_HOST;
     const port = process.env.BROWSERSTACK_PORT || 443;
     const path = '/wd/hub';
     const https = parseInt(port, 10) === 443;

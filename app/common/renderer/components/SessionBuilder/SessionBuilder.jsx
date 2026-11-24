@@ -5,6 +5,7 @@ import {useCallback, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useNavigate} from 'react-router';
 
+import {checkIfAllParamsPresent} from '../../../shared/setting-defs.js';
 import {BUTTON} from '../../constants/antd-types.js';
 import {
   APPIUM_INSPECTOR_VERSION,
@@ -12,7 +13,6 @@ import {
   NORMAL_WINDOW_MESSAGE_EVENT,
   WINDOW_MESSAGE_TARGET_ORIGIN,
 } from '../../constants/common.js';
-import {checkIfAllParamsPresent} from '../../../shared/setting-defs.js';
 import {
   ADD_CLOUD_PROVIDER_TAB_KEY,
   SERVER_TYPES,
@@ -63,6 +63,7 @@ const Session = (props) => {
     setVisibleProviders,
     bindWindowClose,
     initFromQueryString,
+    initAaDashboardSession,
     setPortFromUrl,
     getRunningSessions,
     showError,
@@ -114,6 +115,8 @@ const Session = (props) => {
         await setPortFromUrl();
         initFromQueryString(loadNewSession);
         await initFromSessionFile();
+        // App Automate dashboard mode: configure BrowserStack creds + auto-attach to session_id
+        await initAaDashboardSession(loadNewSession);
       } catch (e) {
         log.error(e);
       }
@@ -122,6 +125,7 @@ const Session = (props) => {
     // none of these will actually change, since they are coming from Redux
     bindWindowClose,
     getSavedSessions,
+    initAaDashboardSession,
     initFromQueryString,
     initFromSessionFile,
     loadNewSession,

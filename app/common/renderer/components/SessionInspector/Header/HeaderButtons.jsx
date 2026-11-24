@@ -2,6 +2,7 @@ import {
   IconChevronLeft,
   IconCircle,
   IconExclamationCircle,
+  IconExternalLink,
   IconHome,
   IconInfoCircle,
   IconMessageChatbot,
@@ -95,6 +96,11 @@ const HeaderButtons = (props) => {
       {type: INSTRUMENTATION_WINDOW_MESSAGE_EVENT, action: 'home-cta-clicked', sessionId: window.AppLiveSessionId},
       WINDOW_MESSAGE_TARGET_ORIGIN,
     );
+  };
+
+  // AA: pop the embedded Inspector out into a top-level tab; keep the opener so the new tab proves a same-origin opener and re-enters AA mode (see isTrustedAaPopout).
+  const openInNewTab = () => {
+    window.open(window.location.href, '_blank');
   };
 
   const windowMessageCallback = useCallback((event) => {
@@ -312,6 +318,11 @@ const HeaderButtons = (props) => {
             danger
             onClick={pauseRecording}
           />
+        </Tooltip>
+      )}
+      {isAaDashboard() && (
+        <Tooltip title={t('Open in new tab')}>
+          <Button id="btnOpenInNewTab" icon={<IconExternalLink size={18} />} onClick={openInNewTab} />
         </Tooltip>
       )}
     </Space.Compact>

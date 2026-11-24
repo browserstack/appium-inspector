@@ -8,15 +8,36 @@ const AA_DASHBOARD_URL =
   'http://localhost/?username=user1&accessKey=key1&session_id=sess123&source=aa_dashboard';
 const AA_MISSING_CRED_URL = 'http://localhost/?username=user1&session_id=sess123&source=aa_dashboard';
 
-function stubWindow(href, {embedded = true, embedderOrigin = 'https://app-automate.browserstack.com'} = {}) {
+function stubWindow(
+  href,
+  {embedded = true, embedderOrigin = 'https://app-automate.browserstack.com', opener = null} = {},
+) {
+  let origin;
+  try {
+    origin = new URL(href).origin;
+  } catch {
+    origin = 'http://localhost';
+  }
   const win = {
-    location: {href, ancestorOrigins: embedded ? [embedderOrigin] : []},
+    location: {href, origin, ancestorOrigins: embedded ? [embedderOrigin] : []},
     AppLiveSessionId: null,
+    opener,
   };
   // isAaDashboard() checks window.parent !== window and the ancestor origins
   win.parent = embedded ? {} : win;
   vi.stubGlobal('window', win);
 }
+
+// A top-level tab opened via the in-app "Open in new tab" button has a SAME-ORIGIN opener.
+const sameOriginOpener = (origin = 'http://localhost') => ({location: {origin}});
+// A top-level tab opened by an attacker's site: reading the cross-origin opener's location throws.
+const crossOriginOpener = () => ({
+  location: {
+    get origin() {
+      throw new Error('SecurityError: cross-origin');
+    },
+  },
+});
 
 describe('setting-defs.js', () => {
   beforeEach(() => {
@@ -73,6 +94,29 @@ describe('setting-defs.js', () => {
 
     it('is false when framed by an untrusted origin (credential-injection guard)', async () => {
       stubWindow(AA_DASHBOARD_URL, {embedderOrigin: 'https://evil.example.com'});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is true for a same-origin pop-out (top-level tab opened by the in-app button)', async () => {
+      // pop-out into a top-level tab with a same-origin opener → AA mode still applies
+      stubWindow(AA_DASHBOARD_URL, {embedded: false, opener: sameOriginOpener()});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(true);
+    });
+
+    it('is false for a top-level tab opened by a cross-origin site (window.open from attacker)', async () => {
+      // cross-origin opener → must NOT be trusted (else it reopens the top-level login-CSRF hole)
+      stubWindow(AA_DASHBOARD_URL, {embedded: false, opener: crossOriginOpener()});
+      const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
+      expect(isAaDashboard()).toBe(false);
+    });
+
+    it('is false for a top-level tab whose opener is a different same-ancestor origin', async () => {
+      stubWindow(AA_DASHBOARD_URL, {
+        embedded: false,
+        opener: sameOriginOpener('https://evil.example.com'),
+      });
       const {isAaDashboard} = await import('../../app/common/shared/setting-defs.js');
       expect(isAaDashboard()).toBe(false);
     });

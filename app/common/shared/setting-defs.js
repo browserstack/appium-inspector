@@ -47,16 +47,35 @@ const originIsAaDashboard = (origin) => {
   );
 };
 
+// Trusted pop-out: a top-level tab the Inspector opened (window.open from the gated button) has a same-origin opener; cross-origin openers throw on the .origin read and plain navigations have none.
+const isTrustedAaPopout = () => {
+  try {
+    return (
+      !!window.opener &&
+      window.opener !== window &&
+      window.opener.location.origin === window.location.origin
+    );
+  } catch {
+    // cross-origin opener → not trusted
+    return false;
+  }
+};
+
 // The Inspector may only enter AA mode when it is framed AND every ancestor frame is a trusted
-// App Automate dashboard origin. Being framed alone is not proof — an attacker could embed the
-// real Inspector URL with crafted URL credentials (login-CSRF / credential injection). We verify
-// the embedder via location.ancestorOrigins (reliable on Chromium/WebKit, not strippable), falling
-// back to the document.referrer origin where ancestorOrigins is unavailable (e.g. Firefox).
+// App Automate dashboard origin, OR it is a same-origin pop-out of such a frame (see above). Being
+// framed alone is not proof — an attacker could embed the real Inspector URL with crafted URL
+// credentials (login-CSRF / credential injection). We verify the embedder via
+// location.ancestorOrigins (reliable on Chromium/WebKit, not strippable), falling back to the
+// document.referrer origin where ancestorOrigins is unavailable (e.g. Firefox).
 // NOTE: the stronger fix is to stop passing credentials in the URL and have the verified parent
 // send them via an origin-checked postMessage — tracked as a follow-up (remove accessKey from URL).
 const isEmbeddedByAaDashboard = () => {
-  if (typeof window === 'undefined' || window.parent === window) {
+  if (typeof window === 'undefined') {
     return false;
+  }
+  if (window.parent === window) {
+    // Not framed: the only trusted top-level case is a same-origin pop-out of the dashboard.
+    return isTrustedAaPopout();
   }
   try {
     const ancestors = window.location.ancestorOrigins;
